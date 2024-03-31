@@ -1,0 +1,9 @@
+*.profile
+*.test
+.build
+.tags
+.vscode
+build
+cover.out
+tags
+vendor
