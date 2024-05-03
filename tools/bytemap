@@ -12,4 +12,4 @@ shuffle() {
     bytes | sort --random-sort
 }
 
-shuffle | sed -z "s/\n//g" | xxd -p -r >"${2:-./local/key.bin}"
+shuffle | sed -z "s/\n//g" | xxd -p -r >"${1:-./local/key.bin}"
