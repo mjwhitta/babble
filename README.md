@@ -48,6 +48,47 @@ import (
     "github.com/mjwhitta/babble"
 )
 
+//go:embed key.txt
+var key []byte
+
+//go:embed payload.bab
+var payload []byte
+
+func main() {
+    var b []byte
+    var e error
+    var k *babble.Key
+
+    k, e = babble.NewKeyFromBytes(key, &babble.WordMode{})
+    if e != nil {
+        panic(e)
+    }
+
+    if b, e = babble.Decrypt(payload, k); e != nil {
+        panic(e)
+    }
+
+    fmt.Printf("%s", b)
+}
+```
+
+Then run the following commands:
+
+```
+$ babble -k /path/to/key.txt /path/to/payload >payload.bab
+$ go run ./main.go
+```
+
+Alternatively, if you don't want to embed the key file:
+
+```
+package main
+
+import (
+    _ "embed"
+    "fmt"
+)
+
 //go:embed payload.bab
 var payload []byte
 
@@ -66,9 +107,9 @@ func main() {
 Then run the following commands:
 
 ```
+$ babble -k /path/to/key.txt >decrypt.go
 $ babble -k /path/to/key.txt /path/to/payload >payload.bab
-$ babble -k /path/to/key.txt >>main.go # This creates babbleDecrypt()
-$ go run ./main.go
+$ go run ./decrypt.go ./main.go
 ```
 
 ## Links

@@ -135,6 +135,8 @@ func (k *Key) Set(b byte, t Token) error {
 // String will return a string representation of the Key.
 func (k *Key) String() string {
 	var out []string = []string{
+		"package main\n",
+		"import \"github.com/mjwhitta/babble\"\n",
 		"func babbleDecrypt(b []byte) ([]byte, error) {",
 		"\tvar k *babble.Key",
 		"",
