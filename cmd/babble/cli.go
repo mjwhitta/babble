@@ -55,12 +55,13 @@ func init() {
 		"Babble will use the provided key file to create a simple",
 		"substitution cipher in order to decrypt/encrypt files.",
 	)
-	cli.Section(
+	cli.SectionAligned(
 		"MODES",
-		"b, byte - Split on bytes.\n",
-		"p, paragraph - Split on paragraphs.\n",
-		"s, sentence - Split on sentences.\n",
-		"w, word - Split on words.",
+		"|",
+		"b, byte|Split on bytes.\n",
+		"p, paragraph|Split on paragraphs.\n",
+		"s, sentence|Split on sentences.\n",
+		"w, word|Split on words.",
 	)
 	cli.Title = "Babble"
 
