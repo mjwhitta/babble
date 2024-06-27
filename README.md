@@ -15,9 +15,8 @@ cipher in order to decrypt/encrypt files.
 Open a terminal and run the following:
 
 ```
-$ go get --ldflags "-s -w" --trimpath -u github.com/mjwhitta/babble
-$ go install --ldflags "-s -w" --trimpath \
-    github.com/mjwhitta/babble/cmd/babble@latest
+$ go get -u github.com/mjwhitta/babble
+$ go install github.com/mjwhitta/babble/cmd/babble@latest
 ```
 
 Or compile from source:
