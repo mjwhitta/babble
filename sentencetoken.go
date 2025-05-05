@@ -1,6 +1,7 @@
 package babble
 
 import (
+	"slices"
 	"strings"
 
 	hl "github.com/mjwhitta/hilighter"
@@ -42,10 +43,8 @@ func (t SentenceToken) Normalize() Token {
 				return r
 			}
 
-			for i := range keep {
-				if r == keep[i] {
-					return r
-				}
+			if slices.Contains(keep, r) {
+				return r
 			}
 
 			return -1

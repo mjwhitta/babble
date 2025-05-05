@@ -144,7 +144,7 @@ func (k *Key) String() string {
 		"\t\tmap[byte][]babble.Token{",
 	}
 
-	for i := 0; i < 256; i++ {
+	for i := range 256 {
 		out = append(out, hl.Sprintf("\t\t\t0x%02x: {", i))
 
 		for _, t := range k.key[byte(i)] {
