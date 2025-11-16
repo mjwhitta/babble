@@ -1,12 +1,10 @@
 package main
 
 import (
-	"encoding/hex"
 	"flag"
-	"fmt"
+	"math"
 	"math/rand/v2"
 	"os"
-	"strings"
 )
 
 var fn string
@@ -15,6 +13,7 @@ func init() {
 	flag.Usage = func() {
 		println("Usage: bytemap <file>")
 	}
+
 	flag.Parse()
 
 	if flag.NArg() != 1 {
@@ -27,28 +26,24 @@ func init() {
 
 func main() {
 	var b []byte
-	var bytes []string
 	var e error
 
-	for i := 0; i < 256; i++ {
-		bytes = append(bytes, fmt.Sprintf("%02x", i))
+	for i := range math.MaxUint8 + 1 {
+		b = append(b, byte(i))
 	}
 
 	rand.Shuffle(
-		256,
+		math.MaxUint8+1,
 		func(i int, j int) {
-			var tmp string = bytes[i]
+			var tmp byte = b[i]
 
-			bytes[i] = bytes[j]
-			bytes[j] = tmp
+			b[i] = b[j]
+			b[j] = tmp
 		},
 	)
 
-	if b, e = hex.DecodeString(strings.Join(bytes, "")); e != nil {
+	//nolint:mnd // u=rw,go=-
+	if e = os.WriteFile(fn, b, 0o600); e != nil {
 		println(e.Error())
-	} else {
-		if e = os.WriteFile(fn, b, 0o644); e != nil {
-			println(e.Error())
-		}
 	}
 }

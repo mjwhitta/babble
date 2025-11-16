@@ -5,5 +5,6 @@
 .vscode
 build
 cover.out
+local
 tags
 vendor

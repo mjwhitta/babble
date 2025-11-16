@@ -6,18 +6,20 @@ import (
 	"math/rand"
 )
 
-func randIntn(max int) int {
+func randIntn(maxN int) int {
 	var e error
 	var n *big.Int
 
 	if !CryptoSecure {
-		return rand.Intn(max)
+		//nolint:gosec // G404 - User's choice, not default
+		return rand.Intn(maxN)
 	}
 
-	n, e = urandom.Int(urandom.Reader, big.NewInt(int64(max)))
+	n, e = urandom.Int(urandom.Reader, big.NewInt(int64(maxN)))
 	if e != nil {
 		// Fallback to less secure PRNG
-		return rand.Intn(max)
+		//nolint:gosec // G404 - User's choice, not default
+		return rand.Intn(maxN)
 	}
 
 	return int(n.Int64())

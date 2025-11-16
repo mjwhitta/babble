@@ -1,11 +1,13 @@
 package babble
 
 import (
+	"fmt"
+	"math"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/mjwhitta/errors"
-	hl "github.com/mjwhitta/hilighter"
 )
 
 // Key is a struct containing the key data required to decrypt/encrypt
@@ -25,9 +27,9 @@ func newKey(width ...int) *Key {
 	}
 
 	return &Key{
-		key:    make(map[byte][]Token, 256),
+		key:    make(map[byte][]Token, math.MaxUint8+1),
 		Mode:   &WordMode{},
-		revkey: make(map[Token]byte, width[0]*256),
+		revkey: make(map[Token]byte, width[0]*(math.MaxUint8+1)),
 		width:  width[0],
 	}
 }
@@ -39,15 +41,12 @@ func NewKeyFromBytes(b []byte, m Mode, width ...int) (*Key, error) {
 	var i int
 	var k *Key = newKey(width...)
 
-	k.Mode = m
+	if k.Mode = m; !k.Mode.AllowsMultiples() {
+		k.width = 1
+	}
 
 	for _, t := range k.Mode.Tokenize(b) {
-		// Allow for obfuscation of key file
-		if t = t.Normalize(); t == nil {
-			continue
-		}
-
-		if e = k.Set(byte(i%256), t); e != nil {
+		if e = k.Set(byte(i%(math.MaxUint8+1)), t); e != nil {
 			// Allow for obfuscation of key file
 			continue
 		}
@@ -55,13 +54,17 @@ func NewKeyFromBytes(b []byte, m Mode, width ...int) (*Key, error) {
 		i++
 
 		// Ignore extras
-		if i == (k.width * 256) {
+		if i == (k.width * (math.MaxUint8 + 1)) {
 			break
 		}
 	}
 
-	if i != (k.width * 256) {
-		e = errors.Newf("key file missing %d tokens", (k.width*256)-i)
+	if i != (k.width * (math.MaxUint8 + 1)) {
+		e = errors.Newf(
+			"key file missing %d tokens",
+			(k.width*(math.MaxUint8+1))-i,
+		)
+
 		return nil, e
 	}
 
@@ -74,7 +77,7 @@ func NewKeyFromFile(fn string, m Mode, width ...int) (*Key, error) {
 	var b []byte
 	var e error
 
-	if b, e = os.ReadFile(fn); e != nil {
+	if b, e = os.ReadFile(filepath.Clean(fn)); e != nil {
 		return nil, errors.Newf("failed to read %s: %t", fn, e)
 	}
 
@@ -87,10 +90,13 @@ func NewKeyFromMap(mapping map[byte][]Token, m Mode) (*Key, error) {
 	var k *Key = newKey()
 
 	k.key = mapping
-	k.Mode = m
 	k.revkey = map[Token]byte{}
 
-	if len(mapping) != 256 {
+	if k.Mode = m; !k.Mode.AllowsMultiples() {
+		k.width = 1
+	}
+
+	if len(mapping) != (math.MaxUint8 + 1) {
 		return nil, errors.New("key is missing entries")
 	}
 
@@ -111,16 +117,32 @@ func NewKeyFromMap(mapping map[byte][]Token, m Mode) (*Key, error) {
 
 // ByteFor will return the byte associated with the specified token.
 func (k *Key) ByteFor(t Token) (b byte, ok bool) {
-	// Allow for obfuscation of token
-	b, ok = k.revkey[t.Normalize()]
-	return
+	b, ok = k.revkey[t]
+
+	return b, ok
+}
+
+// BytesFor will return the Token bytes associated with the specified
+// byte.
+func (k *Key) BytesFor(b byte) ([]byte, error) {
+	if len(k.key[b]) == 0 {
+		return nil, errors.Newf("key missing entry for: %02x", b)
+	}
+
+	if len(k.key[b]) == 1 {
+		return k.key[b][0].Bytes(), nil
+	}
+
+	// Randomly pick one
+	return k.key[b][randIntn(len(k.key[b]))].Bytes(), nil
 }
 
 // Set will link the specified byte and token for use with
 // decryption/encryption.
 func (k *Key) Set(b byte, t Token) error {
-	// Allow for obfuscation of token
-	t = t.Normalize()
+	if !t.Valid() {
+		return errors.New("invalid token")
+	}
 
 	if _, ok := k.revkey[t]; ok {
 		return errors.Newf("key includes duplicate token: %s", t)
@@ -144,11 +166,11 @@ func (k *Key) String() string {
 		"\t\tmap[byte][]babble.Token{",
 	}
 
-	for i := range 256 {
-		out = append(out, hl.Sprintf("\t\t\t0x%02x: {", i))
+	for i := range math.MaxUint8 + 1 {
+		out = append(out, fmt.Sprintf("\t\t\t0x%02x: {", i))
 
 		for _, t := range k.key[byte(i)] {
-			out = append(out, hl.Sprintf("\t\t\t\t%s,", t.String()))
+			out = append(out, fmt.Sprintf("\t\t\t\t%s,", t.String()))
 		}
 
 		out = append(out, "\t\t\t},")
@@ -157,7 +179,11 @@ func (k *Key) String() string {
 	out = append(
 		out,
 		"\t\t},",
-		strings.ReplaceAll(hl.Sprintf("\t\t&%T{},", k.Mode), "*", ""),
+		strings.ReplaceAll(
+			fmt.Sprintf("\t\t&%T{},", k.Mode),
+			"*",
+			"",
+		),
 		"\t)",
 		"",
 		"\treturn babble.Decrypt(b, k)",
@@ -165,18 +191,4 @@ func (k *Key) String() string {
 	)
 
 	return strings.Join(out, "\n")
-}
-
-// TokenFor will return the token associated with the specified byte.
-func (k *Key) TokenFor(b byte) (Token, error) {
-	if len(k.key[b]) == 0 {
-		return nil, errors.Newf("key missing entry for: %02x", b)
-	}
-
-	if len(k.key[b]) == 1 {
-		return k.key[b][0], nil
-	}
-
-	// Randomly pick one
-	return k.key[b][randIntn(len(k.key[b]))], nil
 }

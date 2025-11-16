@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/mjwhitta/babble"
@@ -22,7 +24,7 @@ const (
 
 // Flags
 var flags struct {
-	debug   bool
+	debug   cli.Counter
 	decrypt bool
 	key     string
 	mode    string
@@ -39,17 +41,18 @@ func init() {
 	// Configure cli package
 	cli.Align = true
 	cli.Authors = []string{"Miles Whittaker <mj@whitta.dev>"}
-	cli.Banner = hl.Sprintf("%s [OPTIONS] [file]", os.Args[0])
+	cli.Banner = filepath.Base(os.Args[0]) + " [OPTIONS] [file]"
 	cli.BugEmail = "babble.bugs@whitta.dev"
+
 	cli.ExitStatus(
 		"Normally the exit status is 0. In the event of an error the",
 		"exit status will be one of the below:\n\n",
-		hl.Sprintf("%d: Invalid option\n", InvalidOption),
-		hl.Sprintf("%d: Missing option\n", MissingOption),
-		hl.Sprintf("%d: Invalid argument\n", InvalidArgument),
-		hl.Sprintf("%d: Missing argument\n", MissingArgument),
-		hl.Sprintf("%d: Extra argument\n", ExtraArgument),
-		hl.Sprintf("%d: Exception", Exception),
+		fmt.Sprintf("%d: Invalid option\n", InvalidOption),
+		fmt.Sprintf("%d: Missing option\n", MissingOption),
+		fmt.Sprintf("%d: Invalid argument\n", InvalidArgument),
+		fmt.Sprintf("%d: Missing argument\n", MissingArgument),
+		fmt.Sprintf("%d: Extra argument\n", ExtraArgument),
+		fmt.Sprintf("%d: Exception", Exception),
 	)
 	cli.Info(
 		"Babble will use the provided key file to create a simple",
@@ -63,13 +66,14 @@ func init() {
 		"s, sentence|Split on sentences.\n",
 		"w, word|Split on words.",
 	)
+
 	cli.Title = "Babble"
 
 	// Parse cli flags
 	cli.Flag(
 		&flags.debug,
+		"D",
 		"debug",
-		false,
 		"Test encrypt/decrypt/encrypt.",
 		true,
 	)
@@ -110,8 +114,8 @@ func init() {
 	cli.Flag(
 		&flags.secure,
 		"secure",
-		false,
-		"Use cryptographically secure PRNG.",
+		true,
+		"Use cryptographically secure PRNG (default: true).",
 	)
 	cli.Flag(
 		&flags.skip,
@@ -144,7 +148,9 @@ func validate() {
 
 	// Short circuit if version was requested
 	if flags.version {
-		hl.Printf("babble version %s\n", babble.Version)
+		fmt.Println(
+			filepath.Base(os.Args[0]) + " version " + babble.Version,
+		)
 		os.Exit(Good)
 	}
 
@@ -161,7 +167,6 @@ func validate() {
 	switch strings.ToLower(flags.mode) {
 	case "b", "byte":
 		flags.mode = "byte"
-		flags.skip = 0
 		flags.width = 1
 	case "p", "paragraph":
 		flags.mode = "paragraph"

@@ -5,6 +5,6 @@ package babble
 // allowing for obfuscation of the ciphertext.
 type Token interface {
 	Bytes() []byte
-	Normalize() Token
 	String() string
+	Valid() bool
 }

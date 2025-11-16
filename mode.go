@@ -4,7 +4,8 @@ package babble
 // created from key material and how ciphertext/plaintext is
 // processed.
 type Mode interface {
+	AllowsMultiples() bool
 	Divider() string
-	Skip(int)
-	Tokenize([]byte) []Token
+	Seek(n int)
+	Tokenize(b []byte) []Token
 }

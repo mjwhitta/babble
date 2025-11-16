@@ -2,24 +2,26 @@ package babble
 
 import (
 	"bytes"
+	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/mjwhitta/errors"
 )
 
 // Decrypt will decrypt the provided []string using the provided Key.
-func Decrypt(b []byte, k *Key) ([]byte, error) {
+func Decrypt(ctxt []byte, k *Key) ([]byte, error) {
 	var ptxt []byte
 
-	for _, t := range k.Mode.Tokenize(b) {
+	for _, t := range k.Mode.Tokenize(ctxt) {
 		// Allow for obfuscation of the payload
 		if tmp, ok := k.ByteFor(t); ok {
 			ptxt = append(ptxt, tmp)
 		}
 	}
 
-	if i := bytes.Index(ptxt, []byte(header[1:])); i >= 0 {
-		ptxt = ptxt[i+len(header)-1:]
+	if i := bytes.Index(ptxt, []byte(header)); i >= 0 {
+		ptxt = ptxt[i+len(header):]
 	} else {
 		return nil, errors.New("failed to find babble header")
 	}
@@ -33,13 +35,41 @@ func Decrypt(b []byte, k *Key) ([]byte, error) {
 	return ptxt, nil
 }
 
+// DecryptCompare will decrypt the provided []string using the
+// provided Key. It will then compare to the provided cmp. This is
+// only intended for debugging.
+func DecryptCompare(ctxt []byte, k *Key, cmp []byte) ([]byte, error) {
+	var e error
+	var j int
+	var ptxt []byte
+
+	if ptxt, e = Decrypt(ctxt, k); e != nil {
+		return nil, e
+	}
+
+	for i := range ptxt {
+		if j > len(cmp) {
+			break
+		}
+
+		for ptxt[i] != cmp[j] {
+			fmt.Printf("[%d] %02x != %02x\n", i, cmp[j], ptxt[i])
+			j++
+		}
+
+		j++
+	}
+
+	return ptxt, nil
+}
+
 // DecryptFile will open the provided filename, read the contents, and
 // decrypt using the provided Key.
 func DecryptFile(fn string, k *Key) ([]byte, error) {
 	var b []byte
 	var e error
 
-	if b, e = os.ReadFile(fn); e != nil {
+	if b, e = os.ReadFile(filepath.Clean(fn)); e != nil {
 		return nil, errors.Newf("decrypt failed: %w", e)
 	}
 
@@ -47,17 +77,17 @@ func DecryptFile(fn string, k *Key) ([]byte, error) {
 }
 
 // Encrypt will encrypt the provided []byte using the provided Key.
-func Encrypt(b []byte, k *Key) ([]byte, error) {
+func Encrypt(ptxt []byte, k *Key) ([]byte, error) {
 	var ctxt [][]byte
 
-	b = append([]byte(header), b...)
-	b = append(b, []byte(footer)...)
+	ptxt = append([]byte(header), ptxt...)
+	ptxt = append(ptxt, []byte(footer)...)
 
-	for _, v := range b {
-		if t, e := k.TokenFor(v); e != nil {
+	for _, v := range ptxt {
+		if b, e := k.BytesFor(v); e != nil {
 			return nil, e
-		} else if t != nil {
-			ctxt = append(ctxt, t.Bytes())
+		} else if len(b) > 0 {
+			ctxt = append(ctxt, b)
 		}
 	}
 
@@ -70,7 +100,7 @@ func EncryptFile(fn string, k *Key) ([]byte, error) {
 	var b []byte
 	var e error
 
-	if b, e = os.ReadFile(fn); e != nil {
+	if b, e = os.ReadFile(filepath.Clean(fn)); e != nil {
 		return nil, errors.Newf("encrypt failed: %w", e)
 	}
 

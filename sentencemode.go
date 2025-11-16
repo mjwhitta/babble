@@ -1,14 +1,16 @@
 package babble
 
-import (
-	"regexp"
-	"strings"
-)
+import "regexp"
 
 // SentenceMode will process key material by splitting on typical
-// sentence-ending punctuation. It uses SentenceTokens.
+// sentence-ending punctuation. It uses StringTokens.
 type SentenceMode struct {
-	skip int
+	offset int
+}
+
+// AllowsMultiples is true for SentenceMode.
+func (m *SentenceMode) AllowsMultiples() bool {
+	return true
 }
 
 // Divider returns the divider to use between sentences.
@@ -16,23 +18,26 @@ func (m *SentenceMode) Divider() string {
 	return " "
 }
 
-// Skip will cause Split() to skip the first n tokens.
-func (m *SentenceMode) Skip(n int) {
-	m.skip = n
+// Seek will cause Split() to seek to the specified sentence.
+func (m *SentenceMode) Seek(n int) {
+	m.offset = n
 }
 
 // Tokenize will split on any typical sentence-ending punctuation.
 func (m *SentenceMode) Tokenize(b []byte) []Token {
+	var offset int = m.offset
 	var out []Token
 	var r *regexp.Regexp = regexp.MustCompile(
-		`([A-Z][^!"'.?]*(("[^"]+"|'[^']+')?[^!"'.?]*)*([!.?])+)`,
+		`([A-Za-z][^!"'.?]+[!.?]|"[^"]+[!.?]"|'.*?[!.?]')`,
 	)
-	var s string = whiteSpace.ReplaceAllString(string(b), " ")
+	var s string = reWhiteSpace.ReplaceAllString(string(b), " ")
 
-	s = strings.TrimSpace(s)
+	if offset > len(b) {
+		offset = 0
+	}
 
-	for _, sentence := range r.FindAllString(s, -1)[m.skip:] {
-		out = append(out, SentenceToken{sentence})
+	for _, sentence := range r.FindAllString(s, -1)[offset:] {
+		out = append(out, NewStringToken(sentence, true))
 	}
 
 	return out
