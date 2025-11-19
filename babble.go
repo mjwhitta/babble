@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/mjwhitta/errors"
+	"github.com/mjwhitta/pathname"
 )
 
 // Decrypt will decrypt the provided []string using the provided Key.
@@ -69,8 +69,8 @@ func DecryptFile(fn string, k *Key) ([]byte, error) {
 	var b []byte
 	var e error
 
-	if b, e = os.ReadFile(filepath.Clean(fn)); e != nil {
-		return nil, errors.Newf("decrypt failed: %w", e)
+	if b, e = os.ReadFile(pathname.ExpandPath(fn)); e != nil {
+		return nil, errors.Newf("failed to decrypt: %w", e)
 	}
 
 	return Decrypt(b, k)
@@ -100,8 +100,8 @@ func EncryptFile(fn string, k *Key) ([]byte, error) {
 	var b []byte
 	var e error
 
-	if b, e = os.ReadFile(filepath.Clean(fn)); e != nil {
-		return nil, errors.Newf("encrypt failed: %w", e)
+	if b, e = os.ReadFile(pathname.ExpandPath(fn)); e != nil {
+		return nil, errors.Newf("failed to encrypt: %w", e)
 	}
 
 	return Encrypt(b, k)

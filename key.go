@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"math"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/mjwhitta/errors"
+	"github.com/mjwhitta/pathname"
 )
 
 // Key is a struct containing the key data required to decrypt/encrypt
@@ -77,7 +77,7 @@ func NewKeyFromFile(fn string, m Mode, width ...int) (*Key, error) {
 	var b []byte
 	var e error
 
-	if b, e = os.ReadFile(filepath.Clean(fn)); e != nil {
+	if b, e = os.ReadFile(pathname.ExpandPath(fn)); e != nil {
 		return nil, errors.Newf("failed to read %s: %t", fn, e)
 	}
 
