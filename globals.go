@@ -3,7 +3,7 @@ package babble
 import "regexp"
 
 // Version is the package version.
-const Version string = "0.3.2"
+const Version string = "0.3.3"
 
 var (
 	// CryptoSecure determines whether or not to use a
