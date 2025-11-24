@@ -60,8 +60,8 @@ func TestMode(t *testing.T) {
 		key   []byte
 		mode  babble.Mode
 		name  string
-		seek  int
-		width int
+		seek  uint
+		width uint
 	}
 
 	var b []byte = randomData(16 * 1024) // 16KB

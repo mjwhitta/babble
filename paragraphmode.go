@@ -7,7 +7,7 @@ import (
 // ParagraphMode will process key material by splitting on typical
 // paragraph breaks (two or more newlines). It uses StringTokens.
 type ParagraphMode struct {
-	offset int
+	offset uint
 }
 
 // AllowsMultiples is true for ParagraphMode.
@@ -21,18 +21,18 @@ func (m *ParagraphMode) Divider() string {
 }
 
 // Seek will cause Split() to seek to the specified paragraph.
-func (m *ParagraphMode) Seek(n int) {
+func (m *ParagraphMode) Seek(n uint) {
 	m.offset = n
 }
 
 // Tokenize will split on a typical paragraph break (two or more
 // newlines).
 func (m *ParagraphMode) Tokenize(b []byte) []Token {
-	var offset int = m.offset
+	var offset uint = m.offset
 	var out []Token
 	var r *regexp.Regexp = regexp.MustCompile(`\n\n+`)
 
-	if offset > len(b) {
+	if offset > uint(len(b)) {
 		offset = 0
 	}
 

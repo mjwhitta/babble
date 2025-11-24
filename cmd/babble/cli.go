@@ -31,10 +31,10 @@ var flags struct {
 	nocolor bool
 	quiet   bool
 	secure  bool
-	skip    int
+	skip    uint
 	verbose bool
 	version bool
-	width   int
+	width   uint
 }
 
 func init() {
@@ -179,10 +179,6 @@ func validate() {
 	}
 
 	babble.CryptoSecure = flags.secure
-
-	if flags.skip < 0 {
-		flags.skip = 0
-	}
 
 	if flags.width < 1 {
 		flags.width = 1

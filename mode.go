@@ -6,6 +6,6 @@ package babble
 type Mode interface {
 	AllowsMultiples() bool
 	Divider() string
-	Seek(n int)
+	Seek(n uint)
 	Tokenize(b []byte) []Token
 }

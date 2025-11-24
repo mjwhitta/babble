@@ -5,7 +5,7 @@ import "strings"
 // WordMode is the default means of processing key material. It splits
 // on whitespace and uses StringTokens.
 type WordMode struct {
-	offset int
+	offset uint
 }
 
 // AllowsMultiples is true for WordMode.
@@ -19,16 +19,16 @@ func (m *WordMode) Divider() string {
 }
 
 // Seek will cause Split() to seek to the specified word.
-func (m *WordMode) Seek(n int) {
+func (m *WordMode) Seek(n uint) {
 	m.offset = n
 }
 
 // Tokenize will split on any whitespace.
 func (m *WordMode) Tokenize(b []byte) []Token {
-	var offset int = m.offset
+	var offset uint = m.offset
 	var out []Token
 
-	if offset > len(b) {
+	if offset > uint(len(b)) {
 		offset = 0
 	}
 

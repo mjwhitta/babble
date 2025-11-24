@@ -17,13 +17,13 @@ type Key struct {
 
 	key    map[byte][]Token
 	revkey map[Token]byte
-	width  int
+	width  uint
 }
 
 // newKey will return a pointer to a new Key.
-func newKey(width ...int) *Key {
+func newKey(width ...uint) *Key {
 	if (len(width) == 0) || width[0] < 1 {
-		width = []int{1}
+		width = []uint{1}
 	}
 
 	return &Key{
@@ -36,9 +36,9 @@ func newKey(width ...int) *Key {
 
 // NewKeyFromBytes will parse a byte array and return a pointer to a
 // new Key.
-func NewKeyFromBytes(b []byte, m Mode, width ...int) (*Key, error) {
+func NewKeyFromBytes(b []byte, m Mode, width ...uint) (*Key, error) {
 	var e error
-	var i int
+	var i uint
 	var k *Key = newKey(width...)
 
 	if k.Mode = m; !k.Mode.AllowsMultiples() {
@@ -73,7 +73,7 @@ func NewKeyFromBytes(b []byte, m Mode, width ...int) (*Key, error) {
 
 // NewKeyFromFile will read in a file and return a pointer to a new
 // Key.
-func NewKeyFromFile(fn string, m Mode, width ...int) (*Key, error) {
+func NewKeyFromFile(fn string, m Mode, width ...uint) (*Key, error) {
 	var b []byte
 	var e error
 
@@ -102,7 +102,7 @@ func NewKeyFromMap(mapping map[byte][]Token, m Mode) (*Key, error) {
 
 	for b, s := range mapping {
 		if width := len(s); width > 0 {
-			k.width = width
+			k.width = uint(width)
 		} else {
 			return nil, errors.Newf("key is missing entry: %02x", b)
 		}
