@@ -4,7 +4,7 @@ package babble_test
 import (
 	urandom "crypto/rand"
 	"math"
-	"math/rand"
+	"math/rand/v2"
 	"os"
 	"path/filepath"
 	"testing"
